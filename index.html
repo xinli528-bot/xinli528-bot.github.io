@@ -1,0 +1,1639 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#ff7b70">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="今天吃什么">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <title>今天吃什么？</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    :root {
+      --text: #47352f;
+      --muted: #8a756d;
+      --line: #ffd5c7;
+      --accent: #ff7b70;
+      --accent-dark: #ea5d63;
+      --paper: rgba(255, 255, 255, 0.9);
+      --soft: #fff9f1;
+      --green: #7abf91;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      min-height: 100svh;
+      display: grid;
+      place-items: center;
+      padding: max(18px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+      font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 18% 20%, rgba(255, 236, 190, 0.72), transparent 28%),
+        radial-gradient(circle at 82% 16%, rgba(255, 202, 211, 0.62), transparent 24%),
+        linear-gradient(135deg, #fff8eb 0%, #ffeef2 100%);
+    }
+
+    main {
+      width: min(100%, 860px);
+      padding: 32px;
+      background: var(--paper);
+      border: 2px solid rgba(255, 182, 164, 0.48);
+      border-radius: 22px;
+      box-shadow: 0 18px 40px rgba(163, 100, 83, 0.16);
+      backdrop-filter: blur(10px);
+    }
+
+    .home {
+      width: min(100%, 460px);
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 32px;
+      letter-spacing: 0;
+    }
+
+    .title-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .title-row h1 {
+      margin: 0;
+    }
+
+    .food-icon {
+      display: inline-grid;
+      width: 34px;
+      height: 34px;
+      place-items: center;
+      border-radius: 50%;
+      background: #fff4ec;
+      font-size: 19px;
+      box-shadow: 0 6px 14px rgba(163, 100, 83, 0.12);
+    }
+
+    h2 {
+      margin: 0 0 16px;
+      font-size: 20px;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .primary-button,
+    .small-button {
+      border: 0;
+      border-radius: 999px;
+      color: #fff;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 10px 20px rgba(255, 102, 136, 0.24);
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    .primary-button {
+      width: 220px;
+      min-height: 48px;
+      margin-top: 14px;
+      padding: 12px 24px;
+      font-size: 16px;
+    }
+
+    .small-button {
+      min-height: 44px;
+      padding: 10px 18px;
+      font-size: 15px;
+      white-space: nowrap;
+    }
+
+    .primary-button:hover,
+    .small-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 24px rgba(255, 102, 136, 0.3);
+    }
+
+    .primary-button:active,
+    .small-button:active {
+      transform: translateY(0) scale(0.98);
+    }
+
+    .text-button {
+      border: 0;
+      padding: 0;
+      color: var(--accent-dark);
+      background: transparent;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 4px;
+    }
+
+    .result {
+      min-height: 96px;
+      margin-top: 22px;
+      padding: 20px 16px;
+      display: grid;
+      place-items: center;
+      border: 2px solid rgba(255, 192, 169, 0.78);
+      border-radius: 18px;
+      background: var(--soft);
+      color: #ff655c;
+      font-size: 30px;
+      font-weight: 800;
+      word-break: break-word;
+    }
+
+    .result-label {
+      display: block;
+      margin-bottom: 6px;
+      color: #bd8f85;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .result-name {
+      display: block;
+      color: #ff655c;
+      font-size: 30px;
+      font-weight: 800;
+    }
+
+    .tea-box {
+      margin-top: 22px;
+      padding: 0;
+      border: 2px solid rgba(213, 171, 125, 0.45);
+      border-radius: 18px;
+      background: rgba(255, 248, 237, 0.82);
+      text-align: left;
+      overflow: hidden;
+    }
+
+    .tea-box summary {
+      padding: 16px 18px;
+      color: #7c563a;
+      font-size: 18px;
+      font-weight: 800;
+      cursor: pointer;
+      list-style: none;
+    }
+
+    .tea-box summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .tea-box summary::after {
+      content: "+";
+      float: right;
+      color: #a87448;
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .tea-box[open] summary::after {
+      content: "-";
+    }
+
+    .tea-content {
+      padding: 0 18px 18px;
+    }
+
+    .tea-note {
+      color: #b79a7f;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .tea-box .small-button {
+      display: block;
+      width: 220px;
+      margin-top: 14px;
+      margin-left: auto;
+      margin-right: auto;
+      background: linear-gradient(135deg, #d7a56c, #b87945);
+      box-shadow: 0 10px 20px rgba(184, 121, 69, 0.2);
+    }
+
+    .tea-box .small-button:hover {
+      box-shadow: 0 14px 24px rgba(184, 121, 69, 0.26);
+    }
+
+    .tea-result {
+      min-height: 58px;
+      margin-top: 14px;
+      padding: 13px 14px;
+      display: grid;
+      place-items: center;
+      border: 2px dashed #dfb784;
+      border-radius: 14px;
+      background: #fff6e8;
+      color: #9a633b;
+      font-size: 21px;
+      font-weight: 800;
+      text-align: center;
+      word-break: break-word;
+    }
+
+    .tea-result.placeholder {
+      color: #a89188;
+      font-size: 15px;
+      font-weight: 500;
+    }
+
+    .tea-result .result-label {
+      color: #b89572;
+    }
+
+    .tea-result .result-name {
+      color: #9a633b;
+      font-size: 21px;
+    }
+
+    .tea-result.placeholder .result-name {
+      color: #a89188;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .filter-label {
+      margin-top: 22px;
+      text-align: left;
+    }
+
+    .select-wrap {
+      position: relative;
+      display: block;
+    }
+
+    .select-wrap select {
+      appearance: none;
+      padding-right: 36px;
+    }
+
+    .select-wrap::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      right: 14px;
+      width: 0;
+      height: 0;
+      pointer-events: none;
+      transform: translateY(-35%);
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 7px solid var(--accent-dark);
+    }
+
+    .range-comment {
+      margin-top: 10px;
+      padding: 11px 13px;
+      border-radius: 14px;
+      background: #fff4ec;
+      color: #8a625a;
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.5;
+      text-align: left;
+    }
+
+    .result.placeholder {
+      color: #a89188;
+      font-size: 17px;
+      font-weight: 500;
+    }
+
+    .result.placeholder .result-name {
+      color: #a89188;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .home-link {
+      margin-top: 18px;
+      font-size: 15px;
+    }
+
+    .manage-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .manage-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.55fr) minmax(240px, 0.85fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .add-panel {
+      position: relative;
+      order: 2;
+    }
+
+    .food-panel {
+      order: 1;
+    }
+
+    .add-panel summary {
+      position: relative;
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: #fff;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      font-size: 0;
+      font-weight: 700;
+      line-height: 1;
+      cursor: pointer;
+      list-style: none;
+      box-shadow: 0 10px 20px rgba(255, 102, 136, 0.22);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .add-panel summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .add-panel[open] summary {
+      margin-bottom: 14px;
+    }
+
+    .add-panel[open] summary::before {
+      content: "×";
+    }
+
+    .add-panel:not([open]) summary::before {
+      content: "+";
+    }
+
+    .add-panel summary::before {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -52%);
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .add-panel-content {
+      display: grid;
+      gap: 0;
+    }
+
+    .panel {
+      padding: 18px;
+      border: 2px solid rgba(255, 213, 199, 0.85);
+      border-radius: 18px;
+      background: rgba(255, 253, 249, 0.82);
+    }
+
+    .food-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .search-box {
+      margin-bottom: 12px;
+    }
+
+    .food-row,
+    .food-header {
+      display: grid;
+      grid-template-columns: minmax(110px, 1.2fr) minmax(104px, 0.9fr) 92px 40px;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .food-header {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .header-filter {
+      position: relative;
+    }
+
+    .header-filter summary {
+      min-height: 32px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      color: #8a625a;
+      background: #fff4ec;
+      cursor: pointer;
+      list-style: none;
+      user-select: none;
+    }
+
+    .header-filter summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .header-filter summary::after {
+      content: "";
+      display: inline-block;
+      width: 0;
+      height: 0;
+      margin-left: 6px;
+      vertical-align: middle;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 7px solid var(--accent-dark);
+    }
+
+    .filter-options {
+      position: absolute;
+      z-index: 5;
+      top: calc(100% + 8px);
+      left: 0;
+      min-width: 132px;
+      padding: 8px;
+      display: grid;
+      gap: 5px;
+      border: 2px solid rgba(255, 213, 199, 0.95);
+      border-radius: 14px;
+      background: #fffdf9;
+      box-shadow: 0 12px 24px rgba(163, 100, 83, 0.14);
+    }
+
+    .filter-option {
+      border: 0;
+      border-radius: 10px;
+      padding: 8px 10px;
+      color: var(--text);
+      background: transparent;
+      font: inherit;
+      font-size: 13px;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .filter-option:hover,
+    .filter-option.active {
+      background: #fff0e8;
+      color: var(--accent-dark);
+      font-weight: 700;
+    }
+
+    .clear-filter-button {
+      width: 32px;
+      height: 32px;
+      border: 0;
+      border-radius: 50%;
+      color: #b85655;
+      background: #ffe8e2;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    input,
+    select {
+      width: 100%;
+      min-height: 44px;
+      padding: 9px 11px;
+      border: 2px solid var(--line);
+      border-radius: 12px;
+      outline: none;
+      color: var(--text);
+      background: #fffdf9;
+      font: inherit;
+      font-size: 16px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: #ff9d85;
+      box-shadow: 0 0 0 4px rgba(255, 157, 133, 0.18);
+    }
+
+    .weight-input {
+      text-align: center;
+    }
+
+    .remove-button {
+      width: 40px;
+      height: 40px;
+      border: 0;
+      border-radius: 50%;
+      color: #b85655;
+      background: #ffe8e2;
+      font-size: 20px;
+      line-height: 1;
+      cursor: pointer;
+      transition: transform 0.18s ease, background 0.18s ease;
+    }
+
+    .remove-button:hover {
+      background: #ffd7cf;
+      transform: rotate(6deg);
+    }
+
+    .add-form {
+      display: grid;
+      gap: 12px;
+    }
+
+    .category-form {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: end;
+      margin-bottom: 18px;
+      padding-bottom: 18px;
+      border-bottom: 2px dashed rgba(255, 213, 199, 0.75);
+    }
+
+    .category-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .category-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 32px;
+      padding: 6px 8px 6px 12px;
+      border-radius: 999px;
+      background: #fff4ec;
+      color: #8a625a;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .category-chip.fixed {
+      color: #a89188;
+      background: #fff8f2;
+    }
+
+    .chip-remove {
+      width: 22px;
+      height: 22px;
+      border: 0;
+      border-radius: 50%;
+      color: #b85655;
+      background: #ffe1da;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .note {
+      margin-top: 14px;
+      font-size: 13px;
+    }
+
+    .empty {
+      padding: 18px;
+      border-radius: 14px;
+      background: #fff4ec;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .toast {
+      min-height: 22px;
+      margin-top: 10px;
+      color: var(--green);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .source-view {
+      width: min(94vw, 1100px);
+      text-align: left;
+    }
+
+    .source-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .source-code {
+      max-height: 72vh;
+      margin: 0;
+      padding: 18px;
+      overflow: auto;
+      border: 2px solid rgba(255, 213, 199, 0.85);
+      border-radius: 14px;
+      background: #fffdf9;
+      color: #42302b;
+      font: 14px/1.6 Consolas, "Courier New", monospace;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .pop {
+      animation: pop 0.36s ease;
+    }
+
+    @keyframes pop {
+      0% {
+        opacity: 0.4;
+        transform: scale(0.92) rotate(-1deg);
+      }
+      70% {
+        transform: scale(1.04) rotate(1deg);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) rotate(0);
+      }
+    }
+
+    @media (max-width: 760px) {
+      main {
+        width: 100%;
+        padding: 24px 18px;
+      }
+
+      .manage-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+
+      .manage-head {
+        display: grid;
+      }
+    }
+
+    @media (max-width: 540px) {
+      body {
+        align-items: start;
+        padding: max(14px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+      }
+
+      main {
+        padding: 20px 14px;
+        border-radius: 24px;
+      }
+
+      h1 {
+        font-size: 28px;
+      }
+
+      .primary-button,
+      .tea-box .small-button {
+        width: 100%;
+      }
+
+      .category-form {
+        grid-template-columns: 1fr;
+      }
+
+      .manage-head {
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      .manage-head p {
+        display: none;
+      }
+
+      .manage-head .small-button {
+        min-height: 40px;
+        padding: 9px 14px;
+      }
+
+      .manage-grid {
+        display: block;
+      }
+
+      .add-panel {
+        order: 0;
+        margin-bottom: 14px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+      }
+
+      .add-panel-content {
+        padding: 16px;
+        border: 2px solid rgba(255, 213, 199, 0.85);
+        border-radius: 18px;
+        background: rgba(255, 253, 249, 0.94);
+      }
+
+      .food-panel {
+        padding: 14px;
+      }
+
+      .food-header {
+        grid-template-columns: minmax(76px, 1fr) minmax(70px, 0.9fr) 48px 36px;
+        gap: 6px;
+      }
+
+      .food-row {
+        grid-template-columns: minmax(76px, 1fr) minmax(70px, 0.9fr) 48px 36px;
+        gap: 6px;
+      }
+
+      .remove-button {
+        width: 36px;
+        height: 44px;
+        border-radius: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main id="homeView" class="home">
+    <div class="title-row" aria-label="今天吃什么？">
+      <span class="food-icon" aria-hidden="true">🍜</span>
+      <h1>今天吃什么？</h1>
+      <span class="food-icon" aria-hidden="true">🍰</span>
+    </div>
+    <p>点一下，让今天这顿饭轻轻松松定下来。</p>
+
+    <label class="filter-label">
+      今天想怎么吃？
+      <span class="select-wrap">
+        <select id="pickRange">
+          <option value="favorite">吃点最爱的</option>
+          <option value="liked" selected>来点稳妥的</option>
+          <option value="adventure">试点新鲜的</option>
+          <option value="all">交给天意决定</option>
+        </select>
+      </span>
+    </label>
+    <div id="rangeComment" class="range-comment" aria-live="polite"></div>
+
+    <button id="pickButton" class="primary-button" type="button">今天吃什么？</button>
+
+    <div id="result" class="result placeholder"></div>
+
+    <details class="tea-box">
+      <summary>再来点下午茶吗？</summary>
+      <div class="tea-content">
+        <p class="tea-note">只会从甜点和咖啡饮料里抽，不影响正餐。</p>
+        <button id="pickTeaButton" class="small-button" type="button">抽个小甜水</button>
+        <div id="teaResult" class="tea-result placeholder"></div>
+      </div>
+    </details>
+
+    <p class="home-link">
+      <button id="openManage" class="text-button" type="button">管理菜单</button>
+    </p>
+  </main>
+
+  <main id="manageView" class="hidden">
+    <div class="manage-head">
+      <div>
+        <h1>管理菜单</h1>
+        <p>调整食物范围、分类和偏好权重。分数越高越容易被抽到，1 分也仍然有机会。</p>
+      </div>
+      <button id="backHome" class="small-button" type="button">返回抽签</button>
+    </div>
+
+    <div class="manage-grid">
+      <details class="panel add-panel">
+        <summary aria-label="展开添加和分类维护"></summary>
+        <div class="add-panel-content">
+          <h2>添加新食物</h2>
+          <form id="categoryForm" class="category-form">
+            <label>
+              新分类标签
+              <input id="newCategoryName" type="text" placeholder="例如：东南亚菜" autocomplete="off">
+            </label>
+            <button class="small-button" type="submit">添加分类</button>
+          </form>
+          <div id="categoryList" class="category-list" aria-label="已有分类"></div>
+
+          <form id="addForm" class="add-form">
+            <label>
+              食物名称
+              <input id="newName" type="text" placeholder="例如：牛肉面" autocomplete="off">
+            </label>
+
+            <label>
+              分类
+              <select id="newCategory"></select>
+            </label>
+
+            <label>
+              偏好权重
+              <select id="newWeight">
+                <option value="1">1 分</option>
+                <option value="2">2 分</option>
+                <option value="3" selected>3 分</option>
+                <option value="4">4 分</option>
+                <option value="5">5 分</option>
+              </select>
+            </label>
+
+            <button class="small-button" type="submit">添加</button>
+            <div id="toast" class="toast" aria-live="polite"></div>
+          </form>
+        </div>
+      </details>
+
+      <section class="panel food-panel">
+        <h2>现有食物范围</h2>
+        <label class="search-box">
+          搜索食物
+          <input id="nameSearch" type="search" placeholder="输入食物名称或相关关键字进行搜索" autocomplete="off">
+        </label>
+        <div class="food-header">
+          <span>食物名称</span>
+          <details id="categoryFilterMenu" class="header-filter">
+            <summary id="categoryFilterSummary">分类</summary>
+            <div id="categoryFilterOptions" class="filter-options"></div>
+          </details>
+          <details id="weightFilterMenu" class="header-filter">
+            <summary id="weightFilterSummary">权重</summary>
+            <div id="weightFilterOptions" class="filter-options"></div>
+          </details>
+          <button id="clearFilters" class="clear-filter-button" type="button" title="清空筛选" aria-label="清空筛选">×</button>
+        </div>
+        <div id="foodList" class="food-list"></div>
+        <p class="note">修改后会自动保存。</p>
+      </section>
+    </div>
+  </main>
+
+  <main id="sourceView" class="source-view hidden">
+    <div class="source-toolbar">
+      <div>
+        <h1>index.html 源码</h1>
+        <p>这个视图只是为了方便查看代码。</p>
+      </div>
+      <button id="backFromSource" class="small-button" type="button">返回网页</button>
+    </div>
+    <pre id="sourceCode" class="source-code"></pre>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "today-food-menu-v2";
+    const CATEGORY_STORAGE_KEY = "today-food-categories-v1";
+    const DEFAULT_MENU_VERSION_KEY = "today-food-menu-default-version";
+    const DEFAULT_MENU_VERSION = "3";
+    const defaultCategories = ["中餐", "西餐", "日式料理", "韩式料理", "甜点", "咖啡饮料", "其他"];
+    let categories = loadCategories();
+    const teaCategories = ["甜点", "咖啡饮料"];
+    const rangeComments = {
+      favorite: "稳稳的幸福，今天就宠自己一下。",
+      liked: "平平淡淡才是真，可靠的一餐最安心。",
+      adventure: "勇于挑战的少年啊，味蕾要出门散步了。",
+      all: "今天只想交给命运，随机之神请开始表演。"
+    };
+    const preferenceWeights = {
+      1: 1,
+      2: 3,
+      3: 7,
+      4: 14,
+      5: 25
+    };
+    const defaultFoods = [
+      { name: "火锅", category: "中餐", weight: 3 },
+      { name: "麻辣烫", category: "中餐", weight: 3 },
+      { name: "黄焖鸡", category: "中餐", weight: 3 },
+      { name: "饺子", category: "中餐", weight: 3 },
+      { name: "牛肉面", category: "中餐", weight: 3 },
+      { name: "煲仔饭", category: "中餐", weight: 3 },
+      { name: "小笼包", category: "中餐", weight: 3 },
+      { name: "披萨", category: "西餐", weight: 3 },
+      { name: "意面", category: "西餐", weight: 3 },
+      { name: "汉堡", category: "西餐", weight: 3 },
+      { name: "牛排", category: "西餐", weight: 3 },
+      { name: "三明治", category: "西餐", weight: 3 },
+      { name: "烤鸡沙拉", category: "西餐", weight: 3 },
+      { name: "奶油蘑菇汤", category: "西餐", weight: 3 },
+      { name: "寿司", category: "日式料理", weight: 3 },
+      { name: "拉面", category: "日式料理", weight: 3 },
+      { name: "咖喱饭", category: "日式料理", weight: 3 },
+      { name: "天妇罗", category: "日式料理", weight: 3 },
+      { name: "鳗鱼饭", category: "日式料理", weight: 3 },
+      { name: "亲子丼", category: "日式料理", weight: 3 },
+      { name: "章鱼烧", category: "日式料理", weight: 3 },
+      { name: "烤肉拌饭", category: "韩式料理", weight: 3 },
+      { name: "炸鸡", category: "韩式料理", weight: 3 },
+      { name: "部队锅", category: "韩式料理", weight: 3 },
+      { name: "泡菜炒饭", category: "韩式料理", weight: 3 },
+      { name: "石锅拌饭", category: "韩式料理", weight: 3 },
+      { name: "韩式冷面", category: "韩式料理", weight: 3 },
+      { name: "辣炒年糕", category: "韩式料理", weight: 3 },
+      { name: "蛋糕", category: "甜点", weight: 3 },
+      { name: "提拉米苏", category: "甜点", weight: 3 },
+      { name: "泡芙", category: "甜点", weight: 3 },
+      { name: "布丁", category: "甜点", weight: 3 },
+      { name: "冰淇淋", category: "甜点", weight: 3 },
+      { name: "舒芙蕾", category: "甜点", weight: 3 },
+      { name: "蛋挞", category: "甜点", weight: 3 },
+      { name: "拿铁", category: "咖啡饮料", weight: 3 },
+      { name: "美式咖啡", category: "咖啡饮料", weight: 3 },
+      { name: "卡布奇诺", category: "咖啡饮料", weight: 3 },
+      { name: "奶茶", category: "咖啡饮料", weight: 3 },
+      { name: "柠檬茶", category: "咖啡饮料", weight: 3 },
+      { name: "抹茶拿铁", category: "咖啡饮料", weight: 3 },
+      { name: "水果茶", category: "咖啡饮料", weight: 3 },
+      { name: "烧烤", category: "其他", weight: 3 },
+      { name: "轻食碗", category: "其他", weight: 3 },
+      { name: "越南河粉", category: "其他", weight: 3 },
+      { name: "泰式炒河粉", category: "其他", weight: 3 },
+      { name: "墨西哥卷饼", category: "其他", weight: 3 },
+      { name: "印度咖喱", category: "其他", weight: 3 },
+      { name: "螺蛳粉", category: "其他", weight: 3 }
+    ];
+
+    const homeView = document.getElementById("homeView");
+    const manageView = document.getElementById("manageView");
+    const sourceView = document.getElementById("sourceView");
+    const sourceCode = document.getElementById("sourceCode");
+    const pickButton = document.getElementById("pickButton");
+    const pickTeaButton = document.getElementById("pickTeaButton");
+    const pickRange = document.getElementById("pickRange");
+    const rangeComment = document.getElementById("rangeComment");
+    const result = document.getElementById("result");
+    const teaResult = document.getElementById("teaResult");
+    const openManage = document.getElementById("openManage");
+    const backHome = document.getElementById("backHome");
+    const backFromSource = document.getElementById("backFromSource");
+    const foodList = document.getElementById("foodList");
+    const categoryFilterMenu = document.getElementById("categoryFilterMenu");
+    const categoryFilterSummary = document.getElementById("categoryFilterSummary");
+    const categoryFilterOptions = document.getElementById("categoryFilterOptions");
+    const weightFilterMenu = document.getElementById("weightFilterMenu");
+    const weightFilterSummary = document.getElementById("weightFilterSummary");
+    const weightFilterOptions = document.getElementById("weightFilterOptions");
+    const clearFilters = document.getElementById("clearFilters");
+    const nameSearch = document.getElementById("nameSearch");
+    const categoryForm = document.getElementById("categoryForm");
+    const newCategoryName = document.getElementById("newCategoryName");
+    const categoryList = document.getElementById("categoryList");
+    const addForm = document.getElementById("addForm");
+    const newName = document.getElementById("newName");
+    const newCategory = document.getElementById("newCategory");
+    const newWeight = document.getElementById("newWeight");
+    const toast = document.getElementById("toast");
+
+    let foods = loadFoods();
+    let categoryFilter = "all";
+    let weightFilter = "all";
+
+    function loadCategories() {
+      const savedCategories = localStorage.getItem(CATEGORY_STORAGE_KEY);
+
+      if (!savedCategories) {
+        return [...defaultCategories];
+      }
+
+      try {
+        const parsedCategories = JSON.parse(savedCategories);
+        return normalizeCategories([...defaultCategories, ...parsedCategories]);
+      } catch {
+        return [...defaultCategories];
+      }
+    }
+
+    function saveCategories() {
+      localStorage.setItem(CATEGORY_STORAGE_KEY, JSON.stringify(categories));
+    }
+
+    function normalizeCategories(categoryList) {
+      const seenCategories = new Set();
+      return categoryList
+        .map((category) => String(category).trim())
+        .filter(Boolean)
+        .filter((category) => {
+          const categoryKey = category.toLowerCase();
+          if (seenCategories.has(categoryKey)) {
+            return false;
+          }
+          seenCategories.add(categoryKey);
+          return true;
+        });
+    }
+
+    function loadFoods() {
+      const savedFoods = localStorage.getItem(STORAGE_KEY);
+
+      if (!savedFoods) {
+        localStorage.setItem(DEFAULT_MENU_VERSION_KEY, DEFAULT_MENU_VERSION);
+        return [...defaultFoods];
+      }
+
+      try {
+        const parsedFoods = JSON.parse(savedFoods);
+        const normalizedFoods = parsedFoods
+          .filter((food) => food.name && food.category)
+          .map((food) => ({
+            name: String(food.name),
+            category: normalizeFoodCategory(food.category),
+            weight: clampWeight(food.weight)
+          }));
+
+        return mergeDefaultFoods(normalizedFoods);
+      } catch {
+        localStorage.setItem(DEFAULT_MENU_VERSION_KEY, DEFAULT_MENU_VERSION);
+        return [...defaultFoods];
+      }
+    }
+
+    function normalizeFoodCategory(category) {
+      const categoryName = String(category).trim();
+
+      if (!categoryName) {
+        return "其他";
+      }
+
+      if (!categories.includes(categoryName)) {
+        categories = normalizeCategories([...categories, categoryName]);
+        saveCategories();
+      }
+
+      return categoryName;
+    }
+
+    function saveFoods() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(foods));
+    }
+
+    function mergeDefaultFoods(savedFoods) {
+      if (localStorage.getItem(DEFAULT_MENU_VERSION_KEY) === DEFAULT_MENU_VERSION) {
+        return savedFoods;
+      }
+
+      const existingNames = new Set(savedFoods.map((food) => food.name.trim().toLowerCase()));
+      const mergedFoods = [...savedFoods];
+
+      defaultFoods.forEach((food) => {
+        const foodName = food.name.trim().toLowerCase();
+        if (!existingNames.has(foodName)) {
+          mergedFoods.push({ ...food });
+          existingNames.add(foodName);
+        }
+      });
+
+      localStorage.setItem(DEFAULT_MENU_VERSION_KEY, DEFAULT_MENU_VERSION);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(mergedFoods));
+      return mergedFoods;
+    }
+
+    function clampWeight(value) {
+      const numberValue = Number(value);
+      if (!Number.isFinite(numberValue)) {
+        return 3;
+      }
+      return Math.min(5, Math.max(1, Math.round(numberValue)));
+    }
+
+    function getDrawWeight(score) {
+      return preferenceWeights[clampWeight(score)];
+    }
+
+    function fillCategoryOptions(selectElement, selectedValue = "中餐") {
+      selectElement.innerHTML = categories
+        .map((category) => {
+          const selected = category === selectedValue ? " selected" : "";
+          return `<option value="${category}"${selected}>${category}</option>`;
+        })
+        .join("");
+    }
+
+    function refreshCategoryControls() {
+      fillCategoryOptions(newCategory, newCategory.value || "中餐");
+      renderFilterMenus();
+      renderCategoryList();
+      renderFoodList();
+    }
+
+    function renderCategoryList() {
+      categoryList.innerHTML = "";
+
+      categories.forEach((category) => {
+        const chip = document.createElement("span");
+        const isDefault = defaultCategories.includes(category);
+        chip.className = `category-chip${isDefault ? " fixed" : ""}`;
+
+        const name = document.createElement("span");
+        name.textContent = category;
+        chip.appendChild(name);
+
+        if (!isDefault) {
+          const removeButton = document.createElement("button");
+          removeButton.className = "chip-remove";
+          removeButton.type = "button";
+          removeButton.textContent = "×";
+          removeButton.title = "删除分类";
+          removeButton.setAttribute("aria-label", `删除分类${category}`);
+          removeButton.addEventListener("click", () => removeCategory(category));
+          chip.appendChild(removeButton);
+        }
+
+        categoryList.appendChild(chip);
+      });
+    }
+
+    function renderFilterMenus() {
+      categoryFilterSummary.textContent = categoryFilter === "all" ? "分类" : categoryFilter;
+      weightFilterSummary.textContent = weightFilter === "all" ? "权重" : `${weightFilter} 分`;
+
+      categoryFilterOptions.innerHTML = "";
+      [{ label: "全部分类", value: "all" }, ...categories.map((category) => ({ label: category, value: category }))]
+        .forEach((option) => {
+          categoryFilterOptions.appendChild(createFilterButton(option, "category"));
+        });
+
+      weightFilterOptions.innerHTML = "";
+      [
+        { label: "全部权重", value: "all" },
+        { label: "1 分", value: "1" },
+        { label: "2 分", value: "2" },
+        { label: "3 分", value: "3" },
+        { label: "4 分", value: "4" },
+        { label: "5 分", value: "5" }
+      ].forEach((option) => {
+        weightFilterOptions.appendChild(createFilterButton(option, "weight"));
+      });
+    }
+
+    function createFilterButton(option, type) {
+      const button = document.createElement("button");
+      button.className = "filter-option";
+      button.type = "button";
+      button.textContent = option.label;
+
+      const isActive = type === "category"
+        ? categoryFilter === option.value
+        : weightFilter === option.value;
+
+      button.classList.toggle("active", isActive);
+      button.addEventListener("click", () => {
+        if (type === "category") {
+          categoryFilter = option.value;
+          categoryFilterMenu.removeAttribute("open");
+        } else {
+          weightFilter = option.value;
+          weightFilterMenu.removeAttribute("open");
+        }
+
+        renderFilterMenus();
+        renderFoodList();
+      });
+
+      return button;
+    }
+
+    function showView(viewName) {
+      const isManage = viewName === "manage";
+      const isSource = viewName === "source";
+      homeView.classList.toggle("hidden", isManage || isSource);
+      manageView.classList.toggle("hidden", !isManage);
+      sourceView.classList.toggle("hidden", !isSource);
+
+      if (isManage) {
+        renderFoodList();
+      }
+
+      if (isSource) {
+        sourceCode.textContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+      }
+    }
+
+    function pickFood() {
+      const availableFoods = foods
+        .filter((food) => food.name.trim())
+        .filter((food) => !teaCategories.includes(food.category))
+        .filter((food) => isInSelectedRange(food.weight));
+
+      if (availableFoods.length === 0) {
+        setMealResult("小提示", getEmptyRangeMessage(), true);
+        animateResult();
+        return;
+      }
+
+      const totalWeight = availableFoods.reduce((sum, food) => sum + getDrawWeight(food.weight), 0);
+      let randomWeight = Math.random() * totalWeight;
+      let selectedFood = availableFoods[0];
+
+      for (const food of availableFoods) {
+        randomWeight -= getDrawWeight(food.weight);
+        if (randomWeight < 0) {
+          selectedFood = food;
+          break;
+        }
+      }
+
+      setMealResult("今天吃", selectedFood.name, false, selectedFood.category);
+      animateResult();
+    }
+
+    function setDailyRecommendation() {
+      const recommendationFoods = foods
+        .filter((food) => food.name.trim())
+        .filter((food) => !teaCategories.includes(food.category))
+        .filter((food) => clampWeight(food.weight) >= 3);
+      const fallbackFoods = foods
+        .filter((food) => food.name.trim())
+        .filter((food) => !teaCategories.includes(food.category));
+      const availableFoods = recommendationFoods.length > 0 ? recommendationFoods : fallbackFoods;
+
+      if (availableFoods.length === 0) {
+        setMealResult("今日推荐", "先去菜单里加一点正餐吧", true);
+        return;
+      }
+
+      const randomIndex = Math.floor(Math.random() * availableFoods.length);
+      setMealResult("今日推荐", availableFoods[randomIndex].name, false, availableFoods[randomIndex].category);
+    }
+
+    function setMealResult(label, foodName, isPlaceholder, category = "") {
+      result.textContent = "";
+      result.classList.toggle("placeholder", isPlaceholder);
+
+      const labelElement = document.createElement("span");
+      labelElement.className = "result-label";
+      labelElement.textContent = category ? `${label} · ${category}` : label;
+
+      const nameElement = document.createElement("span");
+      nameElement.className = "result-name";
+      nameElement.textContent = foodName;
+
+      result.append(labelElement, nameElement);
+    }
+
+    function updateRangeComment() {
+      rangeComment.textContent = rangeComments[pickRange.value] || rangeComments.all;
+      rangeComment.classList.remove("pop");
+      void rangeComment.offsetWidth;
+      rangeComment.classList.add("pop");
+    }
+
+    function pickTea() {
+      const availableTeas = foods
+        .filter((food) => food.name.trim())
+        .filter((food) => teaCategories.includes(food.category));
+
+      if (availableTeas.length === 0) {
+        setTeaResult("小提示", "还没有甜点或咖啡饮料，可以去菜单里加一点", true);
+        animateTeaResult();
+        return;
+      }
+
+      const totalWeight = availableTeas.reduce((sum, food) => sum + getDrawWeight(food.weight), 0);
+      let randomWeight = Math.random() * totalWeight;
+      let selectedFood = availableTeas[0];
+
+      for (const food of availableTeas) {
+        randomWeight -= getDrawWeight(food.weight);
+        if (randomWeight < 0) {
+          selectedFood = food;
+          break;
+        }
+      }
+
+      setTeaResult("下午茶吃", selectedFood.name, false, selectedFood.category);
+      animateTeaResult();
+    }
+
+    function setTeaRecommendation() {
+      const availableTeas = foods
+        .filter((food) => food.name.trim())
+        .filter((food) => teaCategories.includes(food.category));
+
+      if (availableTeas.length === 0) {
+        setTeaResult("今日推荐", "先去菜单里加一点下午茶吧", true);
+        return;
+      }
+
+      const randomIndex = Math.floor(Math.random() * availableTeas.length);
+      setTeaResult("今日推荐", availableTeas[randomIndex].name, false, availableTeas[randomIndex].category);
+    }
+
+    function setTeaResult(label, foodName, isPlaceholder, category = "") {
+      teaResult.textContent = "";
+      teaResult.classList.toggle("placeholder", isPlaceholder);
+
+      const labelElement = document.createElement("span");
+      labelElement.className = "result-label";
+      labelElement.textContent = category ? `${label} · ${category}` : label;
+
+      const nameElement = document.createElement("span");
+      nameElement.className = "result-name";
+      nameElement.textContent = foodName;
+
+      teaResult.append(labelElement, nameElement);
+    }
+
+    function isInSelectedRange(score) {
+      const weight = clampWeight(score);
+
+      if (pickRange.value === "favorite") {
+        return weight === 5;
+      }
+
+      if (pickRange.value === "liked") {
+        return weight >= 3 && weight <= 4;
+      }
+
+      if (pickRange.value === "adventure") {
+        return weight >= 1 && weight <= 2;
+      }
+
+      return true;
+    }
+
+    function getEmptyRangeMessage() {
+      if (!foods.some((food) => food.name.trim())) {
+        return "菜单还是空的，先去添加一点想吃的吧";
+      }
+
+      const hasMealFoods = foods.some((food) => food.name.trim() && !teaCategories.includes(food.category));
+
+      if (!hasMealFoods) {
+        return "正餐菜单还是空的，先去添加一点正餐吧";
+      }
+
+      const messages = {
+        favorite: "正餐里还没有 5 分食物，可以去菜单里标几个最爱",
+        liked: "正餐里还没有 3-4 分食物，可以先调整一下偏好",
+        adventure: "正餐里还没有 1-2 分食物，可以加点想尝试的",
+        all: "菜单还是空的，先去添加一点想吃的吧"
+      };
+
+      return messages[pickRange.value] || messages.all;
+    }
+
+    function animateResult() {
+      result.classList.remove("pop");
+      void result.offsetWidth;
+      result.classList.add("pop");
+    }
+
+    function animateTeaResult() {
+      teaResult.classList.remove("pop");
+      void teaResult.offsetWidth;
+      teaResult.classList.add("pop");
+    }
+
+    function renderFoodList() {
+      foodList.innerHTML = "";
+
+      if (foods.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = "现在还没有食物，先添加一个吧。";
+        foodList.appendChild(empty);
+        return;
+      }
+
+      const visibleFoods = foods
+        .map((food, index) => ({ food, index }))
+        .filter(({ food }) => {
+          const searchText = nameSearch.value.trim().toLowerCase();
+          const nameMatches = !searchText || food.name.toLowerCase().includes(searchText);
+          const categoryMatches = categoryFilter === "all" || food.category === categoryFilter;
+          const weightMatches = weightFilter === "all" || clampWeight(food.weight) === Number(weightFilter);
+          return nameMatches && categoryMatches && weightMatches;
+        });
+
+      if (visibleFoods.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = "没有符合条件的食物。";
+        foodList.appendChild(empty);
+        return;
+      }
+
+      visibleFoods.forEach(({ food, index }) => {
+        const row = document.createElement("div");
+        row.className = "food-row";
+
+        const nameInput = document.createElement("input");
+        nameInput.value = food.name;
+        nameInput.setAttribute("aria-label", "食物名称");
+        nameInput.addEventListener("input", () => updateFood(index, "name", nameInput.value.trim()));
+
+        const categorySelect = document.createElement("select");
+        categorySelect.setAttribute("aria-label", "分类");
+        fillCategoryOptions(categorySelect, food.category);
+        categorySelect.addEventListener("change", () => updateFood(index, "category", categorySelect.value));
+
+        const weightInput = document.createElement("input");
+        weightInput.className = "weight-input";
+        weightInput.type = "number";
+        weightInput.min = "1";
+        weightInput.max = "5";
+        weightInput.value = food.weight;
+        weightInput.setAttribute("aria-label", "偏好权重");
+        weightInput.addEventListener("change", () => {
+          const nextWeight = clampWeight(weightInput.value);
+          weightInput.value = nextWeight;
+          updateFood(index, "weight", nextWeight);
+        });
+
+        const removeButton = document.createElement("button");
+        removeButton.className = "remove-button";
+        removeButton.type = "button";
+        removeButton.textContent = "×";
+        removeButton.title = "删除";
+        removeButton.setAttribute("aria-label", `删除${food.name}`);
+        removeButton.addEventListener("click", () => {
+          foods.splice(index, 1);
+          saveFoods();
+          renderFoodList();
+        });
+
+        row.append(nameInput, categorySelect, weightInput, removeButton);
+        foodList.appendChild(row);
+      });
+    }
+
+    function updateFood(index, key, value) {
+      if (key === "weight") {
+        foods[index][key] = clampWeight(value);
+      } else if (key === "category") {
+        foods[index][key] = normalizeFoodCategory(value);
+      } else {
+        foods[index][key] = value;
+      }
+      saveFoods();
+    }
+
+    function addCategory(event) {
+      event.preventDefault();
+      const categoryName = newCategoryName.value.trim();
+
+      if (!categoryName) {
+        showToast("先写一个分类名称");
+        newCategoryName.focus();
+        return;
+      }
+
+      if (categories.some((category) => category.toLowerCase() === categoryName.toLowerCase())) {
+        showToast("这个分类已经有啦");
+        newCategoryName.focus();
+        return;
+      }
+
+      categories = normalizeCategories([...categories, categoryName]);
+      saveCategories();
+      newCategoryName.value = "";
+      fillCategoryOptions(newCategory, categoryName);
+      renderFilterMenus();
+      renderCategoryList();
+      renderFoodList();
+      showToast("分类已添加");
+      newName.focus();
+    }
+
+    function removeCategory(categoryName) {
+      const isUsed = foods.some((food) => food.category === categoryName);
+
+      if (isUsed) {
+        showToast("这个分类下还有食物，先把它们改到别的分类吧");
+        return;
+      }
+
+      categories = categories.filter((category) => category !== categoryName);
+      saveCategories();
+
+      if (categoryFilter === categoryName) {
+        categoryFilter = "all";
+      }
+
+      fillCategoryOptions(newCategory, "中餐");
+      renderFilterMenus();
+      renderCategoryList();
+      renderFoodList();
+      showToast("分类已删除");
+    }
+
+    function addFood(event) {
+      event.preventDefault();
+      const name = newName.value.trim();
+
+      if (!name) {
+        showToast("先写一个食物名称");
+        newName.focus();
+        return;
+      }
+
+      foods.push({
+        name,
+        category: normalizeFoodCategory(newCategory.value),
+        weight: clampWeight(newWeight.value)
+      });
+
+      saveFoods();
+      renderFoodList();
+      addForm.reset();
+      newWeight.value = "3";
+      fillCategoryOptions(newCategory, "中餐");
+      showToast("已添加");
+      newName.focus();
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      window.clearTimeout(showToast.timer);
+      showToast.timer = window.setTimeout(() => {
+        toast.textContent = "";
+      }, 1400);
+    }
+
+    pickButton.addEventListener("click", pickFood);
+    pickTeaButton.addEventListener("click", pickTea);
+    pickRange.addEventListener("change", updateRangeComment);
+    nameSearch.addEventListener("input", renderFoodList);
+    clearFilters.addEventListener("click", () => {
+      categoryFilter = "all";
+      weightFilter = "all";
+      nameSearch.value = "";
+      categoryFilterMenu.removeAttribute("open");
+      weightFilterMenu.removeAttribute("open");
+      renderFilterMenus();
+      renderFoodList();
+    });
+    categoryForm.addEventListener("submit", addCategory);
+    openManage.addEventListener("click", () => {
+      location.hash = "manage";
+      showView("manage");
+    });
+    backHome.addEventListener("click", () => {
+      location.hash = "";
+      showView("home");
+    });
+    backFromSource.addEventListener("click", () => {
+      location.hash = "";
+      showView("home");
+    });
+    addForm.addEventListener("submit", addFood);
+    window.addEventListener("hashchange", () => {
+      if (location.hash === "#manage") {
+        showView("manage");
+      } else if (location.hash === "#source") {
+        showView("source");
+      } else {
+        showView("home");
+      }
+    });
+
+    fillCategoryOptions(newCategory, "中餐");
+    renderFilterMenus();
+    renderCategoryList();
+    updateRangeComment();
+    setDailyRecommendation();
+    setTeaRecommendation();
+    if (location.hash === "#manage") {
+      showView("manage");
+    } else if (location.hash === "#source") {
+      showView("source");
+    } else {
+      showView("home");
+    }
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>
